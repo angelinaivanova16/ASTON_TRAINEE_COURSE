@@ -77,7 +77,12 @@ promiseTwo
     });
 
  // Порядок и вывод в консоли:
-'abc' // так как при чейнинге в каждый следующий then переходит результат от предыдущего.
+'abc' // сначала сработает console.log на 76 строчке. Тут abc, так как при чейнинге в каждый следующий then переходит результат от предыдущего.
+Promise {<fulfilled>: undefined} // потом .then вернет объект промис, так как когда не пишем явно return, это значит: return undefined. Промис выполнился успешно с результатом undefined в последней строчке.
+
+
+// finally не сработает, finally не получает аргументов, так как нельзя определить, будет ли промис выполнен успешно или с ошибкой.
+// catch не сработает, так как нет ошибки.
 /////////////////////////////
 
 
@@ -103,6 +108,12 @@ doSmth()
         return c;
     });
 
+// Порядок и вывод в консоли:
+'1' '123' // сначала сработает console.log на 96 строчке, так как на 92 строке промис выполнился успешно с результатом "123".
+'2' '123' // затем сработает console.log на 100 строчке "123", так как при чейнинге в каждый следующий then переходит результат от предыдущего.
+'3' '321' // затем сработает catch и console.log на 104 строчке "321", так как предыдущий then вернул промис с ошибкой "321", что вызвало catch.
+'4' undefined // catch выполнился, поэтому цепочка восстанавливается, но в then возвращается resolve(undefined)
+Promise {<fulfilled>: undefined} // потом .then вернет объект промис с результатом undefined
 
 ///////////////////////////
 
@@ -110,73 +121,124 @@ doSmth()
 
 
 // 5)
-// console.log("1");
-// setTimeout(function () {
-//     console.log("2");
-// }, 0);
-// Promise.resolve().then(() => console.log("3"));
-// console.log("4");
+console.log("1");
+setTimeout(function () {
+    console.log("2");
+}, 0);
+Promise.resolve().then(() => console.log("3"));
+console.log("4");
+
+// Порядок и вывод в консоли:
+'1' // синхронная операция
+'4' // синхронная операция
+'3' // микротаска
+'2' // макротаска
 ////////////////////////////
+
+
+
 //7)
-// async function a() {
-//   console.log("a");
-// }
+async function a() {
+  console.log("a");
+}
 
-// console.log("1");
+console.log("1");
 
-// (async function () {
-//   console.log("f1");
-//   await a();
-//   console.log("f2");
-// })();
-// console.log("2");
+(async function () {
+  console.log("f1");
+  await a();
+  console.log("f2");
+})();
+console.log("2");
+
+// Порядок и вывод в консоли:
+'1' // синхронная операция
+'f1' // синхронная операция в самовызывающейся анонимной функции
+'a' // вызовали функцию а, в которой синхронный console.log("a")
+'2' // синхронная операция
+'f2' // асинхронная микрозадача после await
 ////////////////////////////////
+
+
+
 //8)
-// console.log(1);
+console.log(1);
 
-// setTimeout(() => console.log(2));
+setTimeout(() => console.log(2));
 
-// async function func() {
-//   console.log(3);
+async function func() {
+  console.log(3);
 
-//   await new Promise((resolve) => {
-//     console.log(4);
-//     resolve();
-//     console.log(5);
-//   })
-//     .then(() => console.log(6))
-//     .then(() => console.log(7));
+  await new Promise((resolve) => {
+    console.log(4);
+    resolve();
+    console.log(5);
+  })
+    .then(() => console.log(6))
+    .then(() => console.log(7));
 
-//   console.log(8);
-// }
+  console.log(8);
+}
 
-// setTimeout(() => console.log(9));
+setTimeout(() => console.log(9));
 
-// func();
+func();
 
-// console.log(10);
+console.log(10);
+
+// Порядок и вывод в консоли:
+1 // синхронная операция
+3 // после вызова функции func выполняеся синхронный console.log(3)
+4 // синхронная операция
+5 // синхронная операция (тут важно, что 180 строка заблокируется, так как микрозадачи приостанавливают выполнение функции до тех пор, пока промис не будет разрешен)
+10 // синхронная операция
+6 // микрозадача
+7 // микрозадача
+8 // синхронная операция в функции, которая была заблокирована очередью предыдущих микротасок здесь же.
+2 // макрозадача
+9 // макрозадача
+
 ///////////////////////////////////
-// 9)*
-// function foo(callback) {
-//     setTimeout(() => {
-//         callback('A');
-//     }, Math.random() * 100);
-// }
-// function bar(callback) {
-//     setTimeout(() => {
-//         callback('B');
-//     }, Math.random() * 100);
-// }
-// function baz(callback) {
-//     setTimeout(() => {
-//         callback('C');
-//     }, Math.random() * 100);
-// }
-//
-// foo(console.log)
-// bar(console.log)
-// baz(console.log)
 
+
+
+// 9)*
 // Написать функцию, чтобы починить последовательность выполнения A,B,C без использования колбэк хэлла
 // в функциях foo, bar,baz запрещено что-либо менять
 // подсказка: нужны промисы =))
+function foo(callback) {
+    setTimeout(() => {
+        callback('A');
+    }, Math.random() * 100);
+}
+function bar(callback) {
+    setTimeout(() => {
+        callback('B');
+    }, Math.random() * 100);
+}
+function baz(callback) {
+    setTimeout(() => {
+        callback('C');
+    }, Math.random() * 100);
+}
+
+const delay = (time) => {
+   return new Promise((resolve, reject) => setTimeout(resolve, time))
+}
+
+delay(100)
+.then(() => {
+    foo(console.log)
+    return delay(100)
+})
+.then(() => {
+    bar(console.log)
+    return delay(100)
+})
+.then(() => {
+    baz(console.log)
+})
+
+// Код работает. Вывод последовательный: A,B,C.
+// Но то ли я сделала, что нужно?
+// эта задача прям сложной для меня была. Я до конца не понимаю, подходит ли это решение.
