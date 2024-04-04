@@ -1,33 +1,34 @@
 //1.
-// const a = {b: 1},
-//     c = Object.create(a);
-//
-// console.log(c.b); // ?
-// delete c.b;
-// console.log(c.b); // ?
-// delete a.b;
-// console.log(c.b); // ?
-// a.z = 2;
-// console.log(c.z); // ?
-// c.z = 3;
-// console.log(a.z); // ?
+const a = {b: 1},
+    c = Object.create(a); // объект c наследуется от объекта a
+
+console.log(c.b); // 1 (c не находит свойство b у себя и берет его у своего прототипа)
+delete c.b;
+console.log(c.b); // 1 (у c и так не было свойства b)
+delete a.b;
+console.log(c.b); // undefined (а вот теперь у прототипа удалено свойство b)
+a.z = 2;
+console.log(c.z); // 2 (так как в прототип добавлено свойство z со значением 2)
+c.z = 3;
+console.log(a.z); // 2 (у объекта a осталось значение 2 у свойства z)
 
 // 2.
+const promise = new Promise(() => {
+})
+promise.prototype === Promise.__proto__ // false (у объекта promise нет prototype, так как prototype есть только у класса или function, значит promise.prototype = undefined.
+// А у объектa Promise __proto__ это  Function.prototype, так как Promise создан с помощью класса new Function)
 
-// const promise = new Promise(() => {
-// })
-// promise.prototype === Promise.__proto__ // ?
-//
-// const obj = {}
-// obj.__proto__ === Object.prototype // ?
-//
-// new Array([]).__proto__ === Array.prototype // ?
-//
-// function Fn1 () {}
-// function Fn2 () {}
-// Fn1.constructor === Fn2.constructor // ?
-//
-// Fn1.prototype === Fn2.prototype // ?
+const obj = {}
+obj.__proto__ === Object.prototype // true (так как obj - это объект, а у любого объекта есть __proto__, у объекта, созданного с пом литерала __proto__  равно Object.prototype)
+
+new Array([]).__proto__ === Array.prototype // true (так как __proto__ массива равно Array.prototype)
+
+function Fn1 () {}
+function Fn2 () {}
+Fn1.constructor === Fn2.constructor // true (так как метод constructor у одной функции всегда равен constructor другой функции)
+
+Fn1.prototype === Fn2.prototype // false (так как prototype - это независимый объект. Один prototype никогда не равен другому prototype)
+
 //3.
 
 // У вас есть два конструктора, Animal и Bird.
@@ -49,3 +50,27 @@
 // bird.speak();   // "Some generic sound"
 // bird.fly();     // "Flying high!"
 
+class Animal {
+  constructor(name) {
+    this.name = name
+  } 
+  speak() {
+    console.log("Some generic sound") 
+  }
+}
+
+class Bird extends Animal {
+  constructor(name) { // вообще, наверно, тут конструктор не нужно прописывать, переопределять, потому что и так все сработает от родительского класса. Не знаю.
+    super(name);
+  }
+  fly() {
+    console.log("Flying high!")
+  }
+}
+
+const animal = new Animal("Дженни");
+const bird = new Bird("Воробей");
+
+animal.speak(); // "Some generic sound"
+bird.speak();   // "Some generic sound"
+bird.fly();     // "Flying high!"
