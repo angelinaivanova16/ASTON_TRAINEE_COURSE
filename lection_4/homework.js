@@ -222,23 +222,43 @@ function baz(callback) {
     }, Math.random() * 100);
 }
 
-const delay = (time) => {
-   return new Promise((resolve, reject) => setTimeout(resolve, time))
-}
+// const delay = (time) => {
+//    return new Promise((resolve, reject) => setTimeout(resolve, time))
+// }
 
-delay(100)
-.then(() => {
-    foo(console.log)
-    return delay(100)
-})
-.then(() => {
-    bar(console.log)
-    return delay(100)
-})
-.then(() => {
-    baz(console.log)
-})
+// delay(100)
+// .then(() => {
+//     foo(console.log)
+//     return delay(100)
+// })
+// .then(() => {
+//     bar(console.log)
+//     return delay(100)
+// })
+// .then(() => {
+//     baz(console.log)
+// })
 
 // Код работает. Вывод последовательный: A,B,C.
 // Но то ли я сделала, что нужно?
 // эта задача прям сложной для меня была. Я до конца не понимаю, подходит ли это решение.
+
+С промисификацией пробовала так: Но где-то тут ошибка(
+const promisify = (f) => {
+    return new Promise((resolve, reject) => {
+        return resolve(f)
+    })
+}
+
+promisify(foo)
+    .then(() => {
+        foo(console.log)
+        return promisify(bar)
+    })
+     .then(() => {
+        bar(console.log)
+        return promisify(baz)
+    })
+     .then(() => {
+        baz(console.log)
+    })
