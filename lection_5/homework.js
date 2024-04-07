@@ -60,12 +60,36 @@ class Animal {
 }
 
 class Bird extends Animal {
-  constructor(name) { // вообще, наверно, тут конструктор не нужно прописывать, переопределять, потому что и так все сработает от родительского класса. Не знаю.
+  constructor(name) {
     super(name);
   }
   fly() {
     console.log("Flying high!")
   }
+}
+
+const animal = new Animal("Дженни");
+const bird = new Bird("Воробей");
+
+animal.speak(); // "Some generic sound"
+bird.speak();   // "Some generic sound"
+bird.fly();     // "Flying high!"
+
+
+// Теперь на функциях:
+function Animal(name) {
+    this.name = name;
+    this.speak = function() {
+        console.log("Some generic sound")
+    };
+}
+
+function Bird(name) {
+    this.name = name;
+    Animal.call(this, name)
+    this.fly = function() {
+        console.log("Flying high!")
+    };
 }
 
 const animal = new Animal("Дженни");
