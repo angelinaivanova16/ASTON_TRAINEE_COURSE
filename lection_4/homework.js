@@ -222,6 +222,31 @@ function baz(callback) {
     }, Math.random() * 100);
 }
 
+// Мое новое решение:
+const promisify = (f) => { // создаю функию, которая вернет промис, с которым можно выполнять последовательные then (в параметр будем передавать наши функции foo, bar, baz)
+    return new Promise(resolve, reject) {
+        f((char) => { // вызываем функцию, передавая ей колбэк с параметром, которым станут наши буквы.
+            resolve(char) // резолвим промис с результатом - буквой из первоначальной функции(foo, bar или baz)
+        })
+    }
+}
+
+promisify(foo) // вызываю promisify, передавая в нее первую нашу функцию
+    .then((char)=> {  // когда промис зарезолвится, вывожу в консоль его результат - букву из первой функции.
+        console.log(char)
+        return promisify(bar) // возвращаю функцию с новым параметром для следующего then
+    })
+    .then((char)=> {
+            console.log(char)
+            return promisify(baz)
+        })
+    .then((char)=> {
+            console.log(char)
+        })
+
+
+
+// Мое костыльное решение:
 // const delay = (time) => {
 //    return new Promise((resolve, reject) => setTimeout(resolve, time))
 // }
@@ -238,27 +263,3 @@ function baz(callback) {
 // .then(() => {
 //     baz(console.log)
 // })
-
-// Код работает. Вывод последовательный: A,B,C.
-// Но то ли я сделала, что нужно?
-// эта задача прям сложной для меня была. Я до конца не понимаю, подходит ли это решение.
-
-С промисификацией пробовала так: Но где-то тут ошибка(
-const promisify = (f) => {
-    return new Promise((resolve, reject) => {
-        return resolve(f)
-    })
-}
-
-promisify(foo)
-    .then(() => {
-        foo(console.log)
-        return promisify(bar)
-    })
-     .then(() => {
-        bar(console.log)
-        return promisify(baz)
-    })
-     .then(() => {
-        baz(console.log)
-    })
