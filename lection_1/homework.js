@@ -31,7 +31,7 @@ function bar() {
     foo();
 }
 
-bar(); // 1
+bar(); // 1 // на 26 строке а берется из лексич окружения родителя, где а = 1. Всплывает объявление var без значения.
 ////////////////////
 
 function foo(a) {
@@ -41,7 +41,7 @@ function foo(a) {
     }
     return a
 }
-console.log(foo(15)) // ошибка, так как переменная 'a'  в блоке if еще не инициализирована, а мы уже хотим ее использовать.
+console.log(foo(15)) 
 ////////////////////
 
 function giveMeX(showX) {
@@ -51,5 +51,5 @@ function giveMeX(showX) {
     return x;
 }
 
-console.log(giveMeX(false)); // ошибка, x не ициализирована.
-console.log(giveMeX(true)); // ошибка, x не ициализирована, у let блочная обл видимости.
+console.log(giveMeX(false)); // ошибка, x не определена.
+console.log(giveMeX(true)); // ошибка, x не определена, у let блочная обл видимости.
